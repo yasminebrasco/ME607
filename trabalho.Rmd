@@ -1,0 +1,46 @@
+---
+title: "Trabalho de Séries"
+author: "Yasmine"
+date: "20/11/2016"
+output: html_document
+---
+
+#Série de tecidos, vestuário e sapatos
+
+```{r echo=FALSE}
+setwd("~/Documentos/Estatística/2S2016/ME607 - Séries Temporais/Trabalho")
+tvc=read.table("serie_tvc.txt",header=T)
+
+# Série Temporal
+serie_tvs <- ts(tvc$TVC,start=2000,frequency=12)
+summary(serie_tvs)
+acf(serie_tvs)
+pacf(serie_tvs)
+```
+
+```{r echo=FALSE}
+#Uma diferenciação
+par(mfrow=c(1,2))
+plot(serie_tvs,main="Volume de Vendas",xlab="Ano",ylab="Vendas")
+serie=diff(serie_tvs, lag=1)
+plot.ts(serie)
+```
+
+```{r echo=FALSE}
+#Duas diferenciações
+par(mfrow=c(1,2))
+plot(serie_tvs,main="Volume de Vendas",xlab="Ano",ylab="Vendas")
+serie=diff(serie_tvs, lag=2)
+plot.ts(serie)
+```
+
+```{r echo=FALSE}
+#Três diferenciações
+par(mfrow=c(1,2))
+plot(serie_tvs,main="Volume de Vendas",xlab="Ano",ylab="Vendas")
+serie=diff(serie_tvs, lag=3)
+plot.ts(serie)
+```
+
+
+
