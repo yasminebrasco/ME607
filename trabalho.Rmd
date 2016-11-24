@@ -10,9 +10,12 @@ output: html_document
 ```{r echo=FALSE}
 setwd("~/Documentos/Estatística/2S2016/ME607 - Séries Temporais/Trabalho")
 tvc=read.table("serie_tvc.txt",header=T)
+tvc$TVC=gsub(",",".",tvc$TVC)
+tvc$TVC=as.double(tvc$TVC)
 
 # Série Temporal
 serie_tvs <- ts(tvc$TVC,start=2000,frequency=12)
+plot.ts(serie_tvs)
 summary(serie_tvs)
 acf(serie_tvs)
 pacf(serie_tvs)
@@ -26,7 +29,7 @@ serie=diff(serie_tvs, lag=1)
 plot.ts(serie)
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, eval=FALSE}
 #Duas diferenciações
 par(mfrow=c(1,2))
 plot(serie_tvs,main="Volume de Vendas",xlab="Ano",ylab="Vendas")
@@ -34,13 +37,114 @@ serie=diff(serie_tvs, lag=2)
 plot.ts(serie)
 ```
 
-```{r echo=FALSE}
-#Três diferenciações
+```{r echo=FALSE, eval=FALSE}
+#Três diferenciações - já começou a piorar
 par(mfrow=c(1,2))
 plot(serie_tvs,main="Volume de Vendas",xlab="Ano",ylab="Vendas")
 serie=diff(serie_tvs, lag=3)
 plot.ts(serie)
 ```
 
+Como não é estacionária para a variância, vamos aplicar uma das transformações de Box-Cox. Utilizaremos a função $ln$ para isso.
 
+```{r echo=FALSE}
+ltvc=tvc
+ltvc$TVC=log(ltvc$TVC)
+sltvc=ts(ltvc$TVC,start=2000,frequency=12)
+plot.ts(sltvc, xlab="Mês", ylab="Log do Volume de Vendas")
+```
+
+Agora a série antes e depois da transformação $log$.
+
+```{r echo=FALSE}
+par(mfrow=c(1,2))
+sltvc=ts(ltvc$TVC,start=2000,frequency=12)
+plot(serie_tvs,main="Volume de Vendas",xlab="Ano",ylab="Vendas")
+plot.ts(sltvc,main="Volume de Vendas",xlab="Ano",ylab="Log das Vendas")
+```
+
+
+Diferenciando a série após aplicar a transformação.
+
+```{r echo=FALSE}
+par(mfrow=c(1,2))
+plot(sltvc,main="Volume de Vendas",xlab="Ano",ylab="Log das Vendas")
+sltvc1=diff(sltvc, lag=1)
+plot.ts(sltvc1)
+```
+
+```{r echo=FALSE}
+summary(sltvc1)
+acf(sltvc1)
+pacf(sltvc1)
+```
+
+Estimando o modelo 
+
+```{r eval=FALSE}
+ari=arima.sim(n=144, list(order=c(1,0,1), ar=.9, ma=.9))
+ari=diff(ari)
+modelo=Arima(ari,order=c(1,1,1),seasonal=list(order=c(1,1,1),period=24))
+x=plot.ts(modelo$residuals)
+plot(modelo$x)
+acf(modelo$residuals)
+pacf(modelo$residuals)
+
+modelo1=sarima(ari, )
+
+teste=arima(tvc$TVC, order = c(2,1,1), seasonal = list(order=c(2,1,1), period=12))
+tsdiag(teste)
+
+sarima=ts(arima, start=2000, frequency = 12)
+plot.ts(cbind(sltvc1,sarima), xy.lines = T)
+plot(sltvc1)
+lines(arima.m, col='red')
+curve(ts(x, start=2000, frequency = 12),add=T)
+```
+
+```{r}
+sarima1=arima(ltvc$TVC, order = c(1,1,1),
+      seasonal = list(order = c(1,1,1), period = 12))
+plot.ts(sarima1)
+```
+
+```{r}
+
+senhor=ts(modelo, start=2000, frequency = 12)
+```
+
+```{r}
+require(ggplot2)
+
+tempo=seq(1:143)
+modelo1=data.frame(tempo=tempo, y1=sltvc1, y2=modelo)
+arima.m<-arima.sim(list(order = c(0,0,12), ma = c(0.7,rep(0,10),0.9)), n = 143)
+plot(arima.m)
+modelo=as.vector(modelo)
+sltvc1=as.vector(sltvc1)
+
+N <- 400
+
+sigma2 <- 0.1
+dominio_x <- seq(1,100, length.out = N)
+
+serie_1 <- sin(0.1*dominio_x)+rnorm(N, sd=sqrt(sigma2))
+serie_2 <- cos(0.1*dominio_x)+rnorm(N, sd=sqrt(sigma2))
+
+data = data.frame(tempo=dominio_x, y1=serie_1,y2=serie_2)
+
+ggplot(modelo1, aes(x=tempo, y=y1))+geom_line(color="red")+
+       geom_line(aes(x=tempo, y=y2), color="blue")+theme_bw(base_size = 14)
+```
+
+#Segunda série
+
+```{r}
+clima=read.table("dados clima.txt",header=F)
+str(clima)
+x=cbind(clima[1,2:14],clima[2,2:14],clima[3,2:14],clima[4,2:14], )
+
+
+dados=apply(clima, 1, x)
+```
 
